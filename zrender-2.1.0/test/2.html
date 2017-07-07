@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Animation</title>
+    <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.js"></script>
+    <style>
+        #main{
+            margin:200px auto;
+            border:2px solid #000;
+        }
+    </style>
+    <script type="text/javascript" src="../doc/asset/js/esl/esl.js"></script>
+</head>
+<body>
+    <div id="main" style="width:400px;height:400px;"></div>
+    <script type="text/javascript">
+    var arrData={
+        "g11":40,
+        "g12":-19.5,
+        "g22":28,
+        "x0":0.459,
+        "y0":0.412,
+        "r1":4,
+        "r2":6
+    };
+    function myEllipse(){
+
+    };
+    myEllipse.prototype={
+        drawMain:function(divid){
+            this.Mainclass(divid);
+        },
+        Setting:{
+            //初始值
+            frameX:0,//起点x
+            frameY:0,//起点y
+            frameX_end:200,//终点x
+            frameY_end:200,//终点y
+            contain_width:200,//容器宽
+            contain_height:200//容器高
+        },
+        Mainclass:function(divid){
+            //获取容器的高度
+            this.Setting.contain_height = $("#" + divid).height();  
+            //获取容器的高度
+            this.Setting.contain_width= $("#" + divid).width();
+            require.config({
+                packages: [
+                    {
+                        name: 'zrender',
+                        location: '../src',
+                        main: 'zrender'
+                    }
+                ]
+            });
+            require(
+                [
+                    "zrender",
+                    'zrender/shape/Line',
+                    'zrender/shape/Text',
+                ], 
+                function(zrender, LineShape, TextShape){
+
+                    // 初始化zrender
+                    var zr = zrender.init(document.getElementById(divid));
+                    myEllipse.prototype.DrawTrend=function(arrData){
+                        //画与y轴平行的辅助线的脚标,js对于小数会乱套，我们给他放大100倍
+                        //然后用的时候在缩小100倍
+                        var lineXLabelName=20;
+                        for(var i=0;i<myEllipse.prototype.Setting.contain_width;i++){
+                            //每个格0.05对应50px!!
+                            if(i%50==0){
+                                var stepX=i;
+                                //画与y轴平行的辅助线
+                                var lineX = new LineShape({
+                                    style:{
+                                        xStart :stepX ,
+                                        yStart : 0,
+                                        xEnd : stepX,
+                                        yEnd : myEllipse.prototype.Setting.contain_height,
+                                        strokeColor : '#BFBFBF',   // == color
+                                        lineWidth : 2,
+                                        lineCap : 'butt',
+                                        lineType : 'dotted',
+                                        text:stepX,
+                                        textPosition:'end'
+                                    },
+                                });
+                                zr.addShape(lineX);
+
+
+                                //画与y轴平行的辅助线的脚标
+                                lineXLabelName=lineXLabelName+5;
+                                var lineXName=lineXLabelName/100;
+                                var lineXLabel = new TextShape({
+                                    style:{
+                                        x : stepX+15,//+15让他往右一点
+                                        y : myEllipse.prototype.Setting.contain_height-8,//-8让他往上移点
+                                        brushType : 'both',
+                                        color : '#000',
+                                        strokeColor : '#000',
+                                        lineWidth : 1,
+                                        text : lineXName,
+                                        textPosition:"top",
+                                        textAlign:"center"
+                                    },
+                                });
+                                zr.addShape(lineXLabel);
+                            };
+                        };
+
+                        var lineYLabelName=20;
+                        for(var m=0;m<myEllipse.prototype.Setting.contain_height;m++){
+                            if(m%50 == 0){
+                                var stepY=m;
+                                var lineY = new LineShape({
+                                    style:{
+                                        xStart :0 ,
+                                        yStart : myEllipse.prototype.Setting.contain_height-stepY,
+                                        xEnd : myEllipse.prototype.Setting.contain_width,
+                                        yEnd : myEllipse.prototype.Setting.contain_height-stepY,
+                                        strokeColor : '#BFBFBF',   // == color
+                                        lineWidth : 2,
+                                        lineCap : 'butt',
+                                        lineType : 'dotted',
+                                        text:'',
+                                        textPosition:'end'
+                                    },
+                                });
+                                zr.addShape(lineY);
+
+                                //画与x轴平行的辅助线的脚标
+                                lineYLabelName=lineYLabelName+5;
+                                var lineYName=lineYLabelName/100;
+                                var lineYLabel = new TextShape({
+                                    style:{
+                                        x : 0+15,//+15让他往右一点
+                                        y : myEllipse.prototype.Setting.contain_height-stepY+11,
+                                        brushType : 'both',
+                                        color : '#000',
+                                        strokeColor : '#000',
+                                        lineWidth : 1,
+                                        text : lineYName,
+                                        textPosition:"top",
+                                        textAlign:"center"
+                                    },
+                                });
+                                zr.addShape(lineYLabel);
+                            };
+                        };
+                        zr.render();
+                    };
+                    myEllipse.prototype.DrawTrend();
+
+                })
+        },
+        EllipseXY:function(arrData){
+            var g11=arrData.g11,
+                g12=arrData.g12,
+                g22=arrData.g22,
+                x0=arrData.x0,
+                y0=arrData.y0,
+                r1=arrData.r1,
+                r2=arrData.r2;
+            var angle,//anle=1度,1度为π/180
+                cosAngle,
+                cosAngle2,
+                sinAngle,
+                sinAngle2,
+                rr,
+                r0,
+                r11,
+                r12,
+                EllipseX0,
+                EllipseY0,
+                EllipseX1,
+                EllipseY1;
+
+
+                angle=(Math.PI/180)*angle;//转为与π对应的值
+                cosAngle=Math.cos(angle);
+                cosAngle2=Math.pow(cosAngle,2);
+                sinAngle=Math.sin(angle);
+                sinAngle2=Math.pow(sinAngle,2);
+                rr=g11*cosAngle2+2g12*cosAngle*sinAngle+g22*sinAngle2;
+                r0=Math.sqrt(rr);
+                r11=(0.01*r1)/r0;
+                r12=(0.01*r2)/r0;
+
+                //EllipseX0,EllipseY0为第一个圆上的坐标
+                EllipseX0=x0+r11*cosAngle;
+                EllipseY0=y0+r11*sinAngle;
+
+                //EllipseX1,EllipseY1为第二个圆上的坐标
+                EllipseX1=x0+r22*cosAngle;
+                EllipseY1=y0+r22*sinAngle;
+
+                //对于x坐标，原来0，对应现在的0.25，所以所有得到的值都给他加个0.25
+        },
+    };
+    $(function(){
+        var aa=new myEllipse();
+        aa.drawMain("main");
+    })
+    </script>
+
+</body>
+</html>
