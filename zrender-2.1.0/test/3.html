@@ -16,13 +16,13 @@
     <div id="main" style="width:400px;height:400px;"></div>
     <script type="text/javascript">
     var arrData={
-        "g11":40,
-        "g12":-19.5,
-        "g22":28,
-        "x0":0.459,
-        "y0":0.412,
-        "r1":4,
-        "r2":6
+        "g11":86,
+        "g12":-40,
+        "g22":45,
+        "x0":0.313,
+        "y0":0.337,
+        "r1":5,
+        "r2":6//必须是大的！
     };
     function myEllipse(){
 
@@ -39,7 +39,11 @@
             frameY_end:200,//终点y
             contain_width:200,//容器宽
             contain_height:200,//容器高
-            arrData:arrData
+            arrData:arrData,//传入的数据
+            xMin:null,//最大最小值
+            xMax:null,
+            yMax:null,
+            yMin:null, 
         },
         Mainclass:function(divid,arrData){
             //获取容器的高度
@@ -47,6 +51,8 @@
             //获取容器的高度
             this.Setting.contain_width= $("#" + divid).width();
             this.Setting.arrData=arrData;
+            //初始化设置一下最大最小
+            myEllipse.prototype.XYAxis();
             require.config({
                 packages: [
                     {
@@ -67,9 +73,9 @@
                     // 初始化zrender
                     var zr = zrender.init(document.getElementById(divid));
                     myEllipse.prototype.DrawTrend=function(arrData){
-                        //画与y轴平行的辅助线的脚标,js对于小数会乱套，我们给他放大100倍
-                        //然后用的时候在缩小100倍
-                        var lineXLabelName=20;
+
+                        //画y轴
+                        var lineXLabelName=Math.round(myEllipse.prototype.Setting.xMin*100)-1;
                         for(var i=0;i<myEllipse.prototype.Setting.contain_width;i++){
                             //每个格0.05对应50px!!
                             if(i%50==0){
@@ -93,11 +99,11 @@
 
 
                                 //画与y轴平行的辅助线的脚标
-                                lineXLabelName=lineXLabelName+5;
+                                lineXLabelName=lineXLabelName+1;
                                 var lineXName=lineXLabelName/100;
                                 var lineXLabel = new TextShape({
                                     style:{
-                                        x : stepX+15,//+15让他往右一点
+                                        x : stepX+35,//+15让他往右一点
                                         y : myEllipse.prototype.Setting.contain_height-8,//-8让他往上移点
                                         brushType : 'both',
                                         color : '#000',
@@ -112,7 +118,8 @@
                             };
                         };
 
-                        var lineYLabelName=20;
+                        //画x轴
+                        var lineYLabelName=Math.round(myEllipse.prototype.Setting.yMin*100)-1;
                         for(var m=0;m<myEllipse.prototype.Setting.contain_height;m++){
                             if(m%50 == 0){
                                 var stepY=m;
@@ -133,12 +140,12 @@
                                 zr.addShape(lineY);
 
                                 //画与x轴平行的辅助线的脚标
-                                lineYLabelName=lineYLabelName+5;
+                                lineYLabelName=lineYLabelName+1;
                                 var lineYName=lineYLabelName/100;
                                 var lineYLabel = new TextShape({
                                     style:{
                                         x : 0+15,//+15让他往右一点
-                                        y : myEllipse.prototype.Setting.contain_height-stepY+11,
+                                        y : myEllipse.prototype.Setting.contain_height-stepY-40,//整体向上移动40px
                                         brushType : 'both',
                                         color : '#000',
                                         strokeColor : '#000',
@@ -153,49 +160,59 @@
                         };
 
                         //画椭圆
+                        // for(var angle=0;angle<360;angle++){
+                        //     //获取传入的数据
+                        //     var arrDataModel=myEllipse.prototype.Setting.arrData;
+
+                        //     //将0-360度对应的点的坐标画出来
+                        //     var result=myEllipse.prototype.EllipseXY(arrDataModel,angle);
+                        //     console.log(result);
+
+                        //     //小圆
+                        //     var EllipseDotLittle = new LineShape({
+                        //         style:{
+                        //             xStart :result[0],
+                        //             yStart :result[1],
+                        //             xEnd : result[0]+1,
+                        //             yEnd : result[1]+1,
+                        //             strokeColor : '#000',   // == color
+                        //             lineWidth : 1,
+                        //             lineCap : 'butt',
+                        //             lineType : 'solid',
+                        //             text:'',
+                        //             textPosition:'end'
+                        //         },
+                        //     });
+                        //     zr.addShape(EllipseDotLittle);
+
+                        //     //大圆
+                        //     var EllipseDotBig = new LineShape({
+                        //         style:{
+                        //             xStart :result[2],
+                        //             yStart :result[3],
+                        //             xEnd : result[2]+1,
+                        //             yEnd : result[3]+1,
+                        //             brushType:"stroke",
+                        //             strokeColor : '#f00',   // == color
+                        //             lineWidth : 1,
+                        //             lineCap : 'butt',
+                        //             lineType : 'solid',
+                        //             text:'',
+                        //             textPosition:'end'
+                        //         },
+                        //     });
+                        //     zr.addShape(EllipseDotBig);
+                        // };
+
+                        //画椭圆
                         for(var angle=0;angle<360;angle++){
                             //获取传入的数据
                             var arrDataModel=myEllipse.prototype.Setting.arrData;
-
-                            //将0-360度对应的点的坐标画出来
-                            var result=myEllipse.prototype.EllipseXY(arrDataModel,angle);
-                            console.log(result);
-
-                            //小圆
-                            var EllipseDotLittle = new LineShape({
-                                style:{
-                                    xStart :result[0],
-                                    yStart :result[1],
-                                    xEnd : result[0]+1,
-                                    yEnd : result[1]+1,
-                                    strokeColor : '#000',   // == color
-                                    lineWidth : 1,
-                                    lineCap : 'butt',
-                                    lineType : 'solid',
-                                    text:'',
-                                    textPosition:'end'
-                                },
-                            });
-                            zr.addShape(EllipseDotLittle);
-
-                            //大圆
-                            var EllipseDotBig = new LineShape({
-                                style:{
-                                    xStart :result[2],
-                                    yStart :result[3],
-                                    xEnd : result[2]+1,
-                                    yEnd : result[3]+1,
-                                    brushType:"stroke",
-                                    strokeColor : '#f00',   // == color
-                                    lineWidth : 1,
-                                    lineCap : 'butt',
-                                    lineType : 'solid',
-                                    text:'',
-                                    textPosition:'end'
-                                },
-                            });
-                            zr.addShape(EllipseDotBig);
+                            var result=myEllipse.prototype.XYTransition(arrDataModel,angle);
                         };
+
+
+
 
                         //画中心点
                         var EllipseX0Y0 = new LineShape({
@@ -222,6 +239,7 @@
                 })
         },
         EllipseXY:function(arrData,angle){
+            //核心算法,计算正常坐标系中的椭圆上的xy值
             var g11=arrData.g11,
                 g12=arrData.g12,
                 g22=arrData.g22,
@@ -267,18 +285,86 @@
                 EllipseX1=x0+r12*cosAngle;
                 EllipseY1=y0+r12*sinAngle;
 
-                //0.05对应50px,所以1对应1000px
-                EllipseX00=(EllipseX0-0.25)*1000;
-                EllipseY00=myEllipse.prototype.Setting.contain_height-1000*(EllipseY0-0.25);
-                EllipseX11=(EllipseX1-0.25)*1000;
-                EllipseY11=myEllipse.prototype.Setting.contain_height-1000*(EllipseY1-0.25);
-                //中心点坐标
-                x00=(x0-0.25)*1000;
-                y00=myEllipse.prototype.Setting.contain_height-1000*(y0-0.25);
-                var result=[EllipseX00,EllipseY00,EllipseX11,EllipseY11,x00,y00];
-                //console.log(result);
+                var result=[EllipseX0,EllipseY0,EllipseX1,EllipseY1,x0,y0];
                 return result;
 
+                // //0.05对应50px,所以1对应1000px
+                // EllipseX00=(EllipseX0-0.25)*1000;
+                // EllipseY00=myEllipse.prototype.Setting.contain_height-1000*(EllipseY0-0.25);
+                // EllipseX11=(EllipseX1-0.25)*1000;
+                // EllipseY11=myEllipse.prototype.Setting.contain_height-1000*(EllipseY1-0.25);
+                // //中心点坐标
+                // x00=(x0-0.25)*1000;
+                // y00=myEllipse.prototype.Setting.contain_height-1000*(y0-0.25);
+                // var result=[EllipseX00,EllipseY00,EllipseX11,EllipseY11,x00,y00];
+                // //console.log(result);
+                // return result;
+
+        },
+        XYAxis:function(){
+            //处理数据，得到最大，最小x,y值,方便在坐标轴系里面调用
+            var resultXTotal=[],
+                resultYTotal=[];
+            for(var XYAxisAngle=0;XYAxisAngle<360;XYAxisAngle++){
+
+                var arrDataModel=myEllipse.prototype.Setting.arrData;
+                //将0-360度对应的点的坐标画出来
+                var result=myEllipse.prototype.EllipseXY(arrDataModel,XYAxisAngle),
+                    resultX=result[2],
+                    resultY=result[3];
+
+                    //所有X压入一个数组
+                    resultXTotal.push(resultX);
+                    //所有Y压入一个数组
+                    resultYTotal.push(resultY);
+            };
+
+            //从小到大排列
+            resultXTotal.sort(function(a,b){
+                return a-b;
+            });
+            resultYTotal.sort(function(a,b){
+                return a-b;
+            });
+
+            var xMax,
+                xMin,
+                yMax,
+                yMin,
+                sortResult=[];
+
+            xMax=resultXTotal[resultXTotal.length-1];
+            xMin=resultXTotal[0];
+
+            yMax=resultYTotal[resultYTotal.length-1];
+            yMin=resultYTotal[0];
+
+            xMin=(xMin-0.01).toFixed(2),
+            xMax=(xMax+0.01).toFixed(2),
+            yMin=(yMin-0.01).toFixed(2),
+            yMax=(yMax+0.01).toFixed(2);
+
+            myEllipse.prototype.Setting.xMin=xMin;
+            myEllipse.prototype.Setting.xMax=xMax;
+            myEllipse.prototype.Setting.yMin=yMin;
+            myEllipse.prototype.Setting.yMax=yMax;
+
+            sortResult[xMin,xMax,yMin,yMax];
+            return sortResult;
+        },
+        XYTransition:function(arrData,angle){
+            //处理一下将EllipseXY中的坐标转换为我们可以直接用的
+            var result=myEllipse.prototype.EllipseXY(arrData,angle),
+                EllipseX0=result[0],
+                EllipseY0=result[1],
+                EllipseX1=result[2],
+                EllipseY1=result[3],
+                EllipseX00,
+                EllipseY00,
+                EllipseX11,
+                EllipseY11;
+
+                
         },
     };
     $(function(){
