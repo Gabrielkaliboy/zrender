@@ -154,7 +154,10 @@
 
                         //画椭圆
                         for(var angle=0;angle<360;angle++){
+                            //获取传入的数据
                             var arrDataModel=myEllipse.prototype.Setting.arrData;
+
+                            //将0-360度对应的点的坐标画出来
                             var result=myEllipse.prototype.EllipseXY(arrDataModel,angle);
                             console.log(result);
 
