@@ -361,6 +361,8 @@
                 myEllipse.prototype.Setting.SDCM=SDCM.toFixed(4);
                 myEllipse.prototype.Setting.xt=xt;
                 myEllipse.prototype.Setting.yt=yt;
+
+                //处理一下xt,yt,在区域内还好，如果超出界定一下画在哪里
                 var result=[EllipseX0,EllipseY0,EllipseX1,EllipseY1,x0,y0];
                 return result;
 
