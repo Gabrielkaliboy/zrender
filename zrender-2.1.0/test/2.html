@@ -2,20 +2,30 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Animation</title>
+    <title>步进值为</title>
     <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.js"></script>
     <style>
         #main{
             margin:200px auto;
-            border:2px solid #000;
         }
     </style>
     <script type="text/javascript" src="../doc/asset/js/esl/esl.js"></script>
 </head>
 <body>
-    <div id="main" style="width:400px;height:400px;"></div>
+    <div id="main" style="width:500px;height:500px;"></div>
     <script type="text/javascript">
     var arrData={
+        "g11":86,
+        "g12":-40,
+        "g22":45,
+        "x0":0.313,//椭圆中心点坐标
+        "y0":0.337,
+        "r1":5,
+        "r2":6,//必须是大的！
+        "xt":0.31,//用户要测的x、y坐标
+        "yt":0.33
+    };
+    var arrData1={
         "g11":40,
         "g12":-19.5,
         "g22":28,
@@ -46,6 +56,8 @@
             this.Setting.contain_height = $("#" + divid).height();  
             //获取容器的高度
             this.Setting.contain_width= $("#" + divid).width();
+            //设置边框线条
+            $("#"+divid).css({"border":"2px solid #000"});
             this.Setting.arrData=arrData;
             require.config({
                 packages: [
@@ -156,7 +168,6 @@
                         for(var angle=0;angle<360;angle++){
                             var arrDataModel=myEllipse.prototype.Setting.arrData;
                             var result=myEllipse.prototype.EllipseXY(arrDataModel,angle);
-                            console.log(result);
 
                             //小圆
                             var EllipseDotLittle = new LineShape({
@@ -273,7 +284,6 @@
                 x00=(x0-0.25)*1000;
                 y00=myEllipse.prototype.Setting.contain_height-1000*(y0-0.25);
                 var result=[EllipseX00,EllipseY00,EllipseX11,EllipseY11,x00,y00];
-                //console.log(result);
                 return result;
 
         },
