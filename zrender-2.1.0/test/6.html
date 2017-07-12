@@ -8,7 +8,6 @@
     <style>
         #main{
             margin:200px auto;
-            border:2px solid #000;
         }
     </style>
     <script type="text/javascript" src="../doc/asset/js/esl/esl.js"></script>
@@ -87,6 +86,8 @@
             this.Setting.contain_height = $("#" + divid).height();  
             //获取容器的高度
             this.Setting.contain_width= $("#" + divid).width();
+            //设置边框线条
+            $("#"+divid).css({"border":"2px solid #000"});
             //根据获取的容器宽高来设置真实坐标系中每格代表多少像素
             this.Setting.kX=this.Setting.contain_width/10;
             this.Setting.kY=this.Setting.contain_height/10;
@@ -250,12 +251,10 @@
                                     yStart :result[1],
                                     xEnd : result[0]+1,
                                     yEnd : result[1]+1,
-                                    strokeColor : '#000',   // == color
-                                    lineWidth : 1,
+                                    strokeColor : '#05FF22',   // == color
+                                    lineWidth : 2,
                                     lineCap : 'butt',
                                     lineType : 'solid',
-                                    text:'',
-                                    textPosition:'end'
                                 },
                             });
                             zr.addShape(EllipseDotLittle);
@@ -268,12 +267,10 @@
                                     xEnd : result[2]+1,
                                     yEnd : result[3]+1,
                                     brushType:"stroke",
-                                    strokeColor : '#f00',   // == color
-                                    lineWidth : 1,
+                                    strokeColor : '#F709C7',   // == color
+                                    lineWidth : 2,
                                     lineCap : 'butt',
                                     lineType : 'solid',
-                                    text:'',
-                                    textPosition:'end'
                                 },
                             });
                             zr.addShape(EllipseDotBig);
@@ -283,19 +280,65 @@
                         //画中心点
                         var EllipseX0Y0 = new LineShape({
                             style:{
-                                xStart :result[4] ,
-                                yStart : result[5],
+                                xStart :result[4]-1 ,
+                                yStart : result[5]+1,
                                 xEnd : result[4]+1,
-                                yEnd : result[5]+1,
+                                yEnd : result[5]-1,
                                 strokeColor : '#000',   // == color
-                                lineWidth :2 ,
+                                lineWidth :4 ,
                                 lineCap : 'butt',
                                 lineType : 'solid',
-                                text:'',
-                                textPosition:'end'
                             },
                         });
                         zr.addShape(EllipseX0Y0);
+
+                        //画中心点
+                        var EllipseX1Y1 = new LineShape({
+                            style:{
+                                xStart :result[4]-1 ,
+                                yStart : result[5]-1,
+                                xEnd : result[4]+1,
+                                yEnd : result[5]+1,
+                                strokeColor : '#000',   // == color
+                                lineWidth :4 ,
+                                lineCap : 'butt',
+                                lineType : 'solid',
+                            },
+                        });
+                        zr.addShape(EllipseX1Y1);
+
+
+                        //画用户传进来的那个点
+                        var xt=myEllipse.prototype.Setting.xt;
+                        var yt=myEllipse.prototype.Setting.yt;
+                        var xtyt11 = new LineShape({
+                            style:{
+                                xStart :xt-1 ,
+                                yStart : yt+1,
+                                xEnd : xt+1,
+                                yEnd : yt-1,
+                                strokeColor : '#FF0000',   // == color
+                                lineWidth :9 ,
+                                lineCap : 'butt',
+                                lineType : 'solid',
+                            },
+                        });
+                        zr.addShape(xtyt11);
+
+                        //画用户传进来的那个点
+                        var xtyt22 = new LineShape({
+                            style:{
+                                xStart :xt-1 ,
+                                yStart : yt-1,
+                                xEnd : xt+1,
+                                yEnd : yt+1,
+                                strokeColor : '#FF0000',   // == color
+                                lineWidth :9 ,
+                                lineCap : 'butt',
+                                lineType : 'solid',
+                            },
+                        });
+                        zr.addShape(xtyt22);
 
 
                         zr.render();
@@ -357,12 +400,27 @@
                 //计算sdcm值
                 SDCM=100*Math.sqrt(g11*Math.pow((xt-x0),2)+2*g12*(xt-x0)*(yt-y0)+g22*Math.pow((yt-y0),2));
 
+
+                //处理一下xt,yt,在区域内还好，如果超出界定一下画在哪里
+            var xMin=myEllipse.prototype.Setting.xMin,
+                xMax=myEllipse.prototype.Setting.xMax,
+                yMin=myEllipse.prototype.Setting.yMin,
+                yMax=myEllipse.prototype.Setting.yMax,
+                sectionXStep=myEllipse.prototype.Setting.sectionXStep,
+                sectionYStep=myEllipse.prototype.Setting.sectionYStep;
+
+                xt<xMin-sectionXStep ? xt=xMin-sectionXStep : xt=xt;
+
+                xt>xMax+sectionXStep ? xt=xMax+sectionXStep : xt=xt;
+
+                yt<yMin-sectionYStep ? yt=yMin-sectionYStep : yt=yt;
+                yt>yMax+sectionYStep ? yt=yMax+sectionYStep : yt=yt;
+
                 //顺手存一下值，方便其他的地方使用
                 myEllipse.prototype.Setting.SDCM=SDCM.toFixed(4);
                 myEllipse.prototype.Setting.xt=xt;
                 myEllipse.prototype.Setting.yt=yt;
 
-                //处理一下xt,yt,在区域内还好，如果超出界定一下画在哪里
                 var result=[EllipseX0,EllipseY0,EllipseX1,EllipseY1,x0,y0];
                 return result;
 
@@ -457,7 +515,9 @@
                 mX,
                 mY,
                 kX,
-                kY;
+                kY,
+                xt,
+                yt;
 
                 xMin=myEllipse.prototype.Setting.xMin;
                 yMin=myEllipse.prototype.Setting.yMin;
@@ -465,6 +525,11 @@
                 mY=myEllipse.prototype.Setting.mY;
                 kX=myEllipse.prototype.Setting.kX;
                 kY=myEllipse.prototype.Setting.kY;
+                xt=myEllipse.prototype.Setting.xt;
+                yt=myEllipse.prototype.Setting.yt;
+                sectionXStep=myEllipse.prototype.Setting.sectionXStep;
+                sectionYStep=myEllipse.prototype.Setting.sectionYStep;
+                contain_height=myEllipse.prototype.Setting.contain_height
                 //圆上所有的点进行转换
                 //1对应mX,mY
                 EllipseX00=(EllipseX0-xMin)*mX+kX;
@@ -476,6 +541,11 @@
                 x00=(x0-xMin)*mX+kX;
                 y00=myEllipse.prototype.Setting.contain_height-kY-(y0-yMin)*mY;
 
+                //与上面算法不一样，因为可能不在xMin,yMin,xMax,yMax里面
+                xt=(xt-(xMin-sectionXStep))*mX;
+                yt=contain_height-((yt-(yMin-sectionYStep))*mY);
+                myEllipse.prototype.Setting.xt=xt;
+                myEllipse.prototype.Setting.yt=yt;
                 result=[EllipseX00,EllipseY00,Ellipsex11,EllipseY11,x00,y00];
                 return result;
         },
