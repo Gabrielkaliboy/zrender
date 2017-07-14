@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>增添椭圆和多边</title>
+    <title>将xy的坐标步进制设为统一</title>
     <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.js"></script>
     <style>
         #main{
@@ -13,7 +13,8 @@
     <script type="text/javascript" src="../doc/asset/js/esl/esl.js"></script>
 </head>
 <body>
-    <div id="main" style="width:700px;height:700px;"></div>
+    <!-- 建议按照这个尺寸给！！！ -->
+    <div id="main" style="width:700px;height:600px;"></div>
     <script type="text/javascript">
     arrDataAll=[{
         "type":"Ellipse",
@@ -76,6 +77,7 @@
             sectionY:null,
             sectionXStep:null,//xy轴按照8份分割，每份的步数值
             sectionYStep:null,
+            sectionXYStep:null,//统一xy坐标轴的步数值，取上面两个的最大值
             kX:null,//每个格多少像素
             kY:null,
             mX:null,//1比例的输入值对应的网页中的像素
@@ -89,7 +91,7 @@
         //如果是加入数据
         addData:function(arrData){
                 //直接将加入的数据塞进总数据接口进行保存
-                myEllipse.prototype.Setting.arrDataAll.push(arrData);
+                this.Setting.arrDataAll.push(arrData);
                 var divid=this.Setting.divid,
                     arrData=this.Setting.arrDataAll;
                 //调用Mainclass函数重绘
@@ -113,9 +115,9 @@
             //将当前的容器ID值存起来
             this.Setting.divid=divid;
             //获取容器的高度
-            this.Setting.contain_height = $("#" + divid).height();  
+            this.Setting.contain_height = $("#" + divid).height()-100;  
             //获取容器的高度
-            this.Setting.contain_width= $("#" + divid).width();
+            this.Setting.contain_width= $("#" + divid).width()-200;
             //设置边框线条
             $("#"+divid).css({"border":"2px solid #000"});
             //根据获取的容器宽高来设置真实坐标系中每格代表多少像素
@@ -124,11 +126,12 @@
             //将第一次传输的数据存一份到arrDataAll
             this.Setting.arrDataAll=arrData;
             //初始化设置一下最大最小以及步长,将用户输入的xt,yt顺便存一份，还有计算出来的SDCM
-            myEllipse.prototype.XYAxis();
-            //顺序不能变，必须先初始XYAxis函数，否则sectionXStep是null
+            this.XYAxis();
+            //顺序不能变，必须先初始XYAxis函数，否则sectionXYStep是null
             //不用管sectionXStep小数点好几位，因为后面用的时候被我处理掉了
-            this.Setting.mX=this.Setting.kX/this.Setting.sectionXStep;
-            this.Setting.mY=this.Setting.kY/this.Setting.sectionYStep;
+            //mX和mY还是比例尺
+            this.Setting.mX=this.Setting.kX/this.Setting.sectionXYStep;
+            this.Setting.mY=this.Setting.kY/this.Setting.sectionXYStep;
             require.config({
                 packages: [
                     {
@@ -151,100 +154,88 @@
                     myEllipse.prototype.DrawTrend=function(arrData){
 
                         //画与y轴平行
-                        var sectionXStep=(Math.ceil((myEllipse.prototype.Setting.sectionXStep.toFixed(5))*1000))/1000;
+                        var sectionXYStep=(Math.ceil((this.Setting.sectionXYStep.toFixed(5))*1000))/1000;
                         //我修改了sectionXStep,我在把它设置回全局,目的是为了后面画圆的时候知道一个格对应多少像素
-                        myEllipse.prototype.Setting.sectionXStep=sectionXStep;
-                        var lineXLabelName=myEllipse.prototype.Setting.xMin-sectionXStep;
+                        this.sectionXYStep=sectionXYStep;
+                        var lineXLabelName=this.Setting.xMin-2*sectionXYStep;
                         //均分10格，每格多少px
-                        var kX=myEllipse.prototype.Setting.kX;
-                        for(var i=0;i<myEllipse.prototype.Setting.contain_width;i++){
+                        var kX=this.Setting.kX;
+                        for(var i=0;i<=10;i++){
                             //每个格sectionXStep对应kX像素!!
-                            if(i%kX==0){
-                                var stepX=i;
-                                //画与y轴平行的辅助线
-                                var lineX = new LineShape({
-                                    style:{
-                                        xStart :stepX ,
-                                        yStart : 0,
-                                        xEnd : stepX,
-                                        yEnd : myEllipse.prototype.Setting.contain_height,
-                                        strokeColor : '#BFBFBF',   // == color
-                                        lineWidth : 2,
-                                        lineCap : 'butt',
-                                        lineType : 'dotted',
-                                        text:stepX,
-                                        textPosition:'end'
-                                    },
-                                });
-                                zr.addShape(lineX);
+                            var stepX=50+i*kX;
+                            //画与y轴平行的辅助线
+                            var lineX = new LineShape({
+                                style:{
+                                    xStart :stepX,
+                                    yStart : 50,
+                                    xEnd : stepX,
+                                    yEnd : this.Setting.contain_height+50,
+                                    strokeColor : '#BFBFBF',   // == color
+                                    lineWidth : 2,
+                                    lineCap : 'butt',
+                                    lineType : 'dotted',
+                                },
+                            });
+                            zr.addShape(lineX);
 
-
-                                //画与y轴平行的辅助线的脚标
-                                lineXLabelName=lineXLabelName+sectionXStep;
-                                var lineXName=lineXLabelName.toFixed(3);
-                                var lineXLabel = new TextShape({
-                                    style:{
-                                        x : stepX+33,//+15让他往右一点,加的越多越往右
-                                        y : myEllipse.prototype.Setting.contain_height-8,//-8让他往上移点
-                                        brushType : 'both',
-                                        color : '#000',
-                                        strokeColor : '#000',
-                                        lineWidth : 1,
-                                        text : lineXName,
-                                        textPosition:"top",
-                                        textAlign:"center"
-                                    },
-                                });
-                                zr.addShape(lineXLabel);
-                            };
+                            //画与y轴平行的辅助线的脚标
+                            lineXLabelName=lineXLabelName+sectionXYStep;
+                            var lineXName=lineXLabelName.toFixed(3);
+                            var lineXLabel = new TextShape({
+                                style:{
+                                    x : stepX,//+30让他往右一点,加的越多越往右
+                                    y : this.Setting.contain_height+50+15,//-8让他往上移点
+                                    brushType : 'both',
+                                    color : '#000',
+                                    strokeColor : '#000',
+                                    lineWidth : 1,
+                                    text : lineXName,
+                                    textPosition:"top",
+                                    textAlign:"center"
+                                },
+                            });
+                            zr.addShape(lineXLabel);
                         };
 
                         //画与x轴平行
-                        //由于sectionYStep的值是小数点后好几位，导致轴系坐标不等宽，我们处理一下，这个值可以偏大
-                        //但是不可以偏小，否则会导致溢出,例如sectionYStep=0.00625,我们把它变为0.007
-                        var sectionYStep=(Math.ceil((myEllipse.prototype.Setting.sectionYStep.toFixed(5))*1000))/1000;
-                        //设置回去
-                        myEllipse.prototype.Setting.sectionYStep=sectionYStep;
-                        var lineYLabelName=myEllipse.prototype.Setting.yMin-sectionYStep;
+                        var lineYLabelName=this.Setting.yMin-2*sectionXYStep;
                         //均分10格，每格多少px
-                        var kY=myEllipse.prototype.Setting.kY;
-                        for(var m=0;m<myEllipse.prototype.Setting.contain_height;m++){
-                            if(m%kY == 0){
-                                var stepY=m;
-                                var lineY = new LineShape({
-                                    style:{
-                                        xStart :0 ,
-                                        yStart : myEllipse.prototype.Setting.contain_height-stepY,
-                                        xEnd : myEllipse.prototype.Setting.contain_width,
-                                        yEnd : myEllipse.prototype.Setting.contain_height-stepY,
-                                        strokeColor : '#BFBFBF',   // == color
-                                        lineWidth : 2,
-                                        lineCap : 'butt',
-                                        lineType : 'dotted',
-                                        text:'',
-                                        textPosition:'end'
-                                    },
-                                });
-                                zr.addShape(lineY);
+                        var kY=this.Setting.kY;
+                        for(m=0;m<=10;m++){
+                            var stepY=m*kY;
+                            var lineY = new LineShape({
+                                style:{
+                                    xStart :50 ,
+                                    yStart : stepY+50,
+                                    xEnd : this.Setting.contain_width+50,
+                                    yEnd : stepY+50,
+                                    strokeColor : '#BFBFBF',   // == color
+                                    lineWidth : 2,
+                                    lineCap : 'butt',
+                                    lineType : 'dotted',
+                                    text:'',
+                                    textPosition:'end'
+                                },
+                            });
+                            zr.addShape(lineY);
 
-                                //画与x轴平行的辅助线的脚标
-                                lineYLabelName=lineYLabelName+sectionYStep;
-                                var lineYName=lineYLabelName.toFixed(3);
-                                var lineYLabel = new TextShape({
-                                    style:{
-                                        x : 0+20,//+15让他往右一点
-                                        y : myEllipse.prototype.Setting.contain_height-stepY-43,//整体向上移动40px
-                                        brushType : 'both',
-                                        color : '#000',
-                                        strokeColor : '#000',
-                                        lineWidth : 1,
-                                        text : lineYName,
-                                        textPosition:"top",
-                                        textAlign:"center"
-                                    },
-                                });
-                                zr.addShape(lineYLabel);
-                            };
+                            //画与x轴平行的辅助线的脚标
+                            lineYLabelName=lineYLabelName+sectionXYStep;
+                            var lineYName=lineYLabelName.toFixed(3);
+                            var lineYLabel = new TextShape({
+                                style:{
+                                    x : 50-20,//50位预留padding，-20为了让脚标在y轴左侧
+                                    y : this.Setting.contain_height+50-stepY,//整体向上移动40px
+                                    brushType : 'both',
+                                    color : '#000',
+                                    strokeColor : '#000',
+                                    lineWidth : 1,
+                                    text : lineYName,
+                                    textPosition:"top",
+                                    textAlign:"center"
+                                },
+                            });
+                            zr.addShape(lineYLabel);
                         };
 
 
@@ -276,8 +267,8 @@
                         var seriesNameY=0;
                         for(var j=0;j<arrDataAll.length;j++){
                             //筛选椭圆的数据
-                            //seriesNameY让他每次下移5px
-                            seriesNameY=seriesNameY+20;
+                            //seriesNameY让他每次下移20px
+                            seriesNameY=seriesNameY+10;
                             //颜色做随机处理
                             var randomColor='#'+Math.floor(Math.random()*0xffffff).toString(16);
                             if(arrDataAll[j].type=="Ellipse"){
@@ -350,11 +341,11 @@
                                 //加文本
                                 var seriesNameShape = new TextShape({
                                     style:{
-                                        x : myEllipse.prototype.Setting.contain_width/2,
+                                        x : this.Setting.contain_width+120,
                                         y : seriesNameY,//整体向上移动40px
                                         brushType : 'both',
                                         color : randomColor,
-                                        textFont : 'bold 16px Arial',
+                                        textFont : 'normal 12px Arial',
                                         strokeColor : randomColor,
                                         lineWidth : 1,
                                         text : seriesName,
@@ -367,7 +358,12 @@
                                 var polygonData=arrDataAll[j].data,
                                     seriesName=arrDataAll[j].name;
                                     //坐标还未转换
-                                    var result=this.XYTransition(polygonData);
+                                    for(n=0;n<=polygonData.length;n++){
+                                        //因为有前后坐标的，这样处理不行的。7.17
+                                        var xyData=polygonData[n];
+                                        //调用坐标转换函数，得到转换后的xy值
+                                        var polygonResult=this.importXY(xyData);
+                                    }
                             }
                         };
 
@@ -520,6 +516,7 @@
                 sectionY,
                 sectionXStep,
                 sectionYStep,
+                sectionXYStep,
                 sortResult=[];
 
             xMax=resultXTotal[resultXTotal.length-1];
@@ -542,6 +539,7 @@
             //均分八份
             sectionXStep=sectionX/8;
             sectionYStep=sectionY/8;
+            sectionXYStep=Math.max(sectionXStep,sectionYStep);
 
             this.Setting.xMin=xMin;
             this.Setting.xMax=xMax;
@@ -551,6 +549,7 @@
             this.Setting.sectionY=sectionY;
             this.Setting.sectionXStep=sectionXStep;
             this.Setting.sectionYStep=sectionYStep;
+            this.Setting.sectionXYStep=sectionXYStep;
 
 
             sortResult[xMin,xMax,yMin,yMax,sectionX,sectionY,sectionXStep,sectionYStep];
@@ -578,7 +577,9 @@
                 kX,
                 kY,
                 xt,
-                yt;
+                yt,
+                sectionXYStep,
+                contain_height;
 
                 xMin=this.Setting.xMin;
                 yMin=this.Setting.yMin;
@@ -588,27 +589,66 @@
                 kY=this.Setting.kY;
                 xt=this.Setting.xt;
                 yt=this.Setting.yt;
-                sectionXStep=this.Setting.sectionXStep;
-                sectionYStep=this.Setting.sectionYStep;
-                contain_height=this.Setting.contain_height
+                sectionXYStep=this.Setting.sectionXYStep;
+
+                contain_height=this.Setting.contain_height;
+                contain_width=this.Setting.contain_width;
                 //圆上所有的点进行转换
                 //1对应mX,mY
-                EllipseX00=(EllipseX0-xMin)*mX+kX;
-                EllipseY00=myEllipse.prototype.Setting.contain_height-kY-(EllipseY0-yMin)*mY;
+                EllipseX00=(EllipseX0-(xMin-sectionXYStep))*mX+50;
+                EllipseY00=contain_height+50-(EllipseY0-(yMin-sectionXYStep))*mY;
 
-                Ellipsex11=(EllipseX1-xMin)*mX+kX;
-                EllipseY11=myEllipse.prototype.Setting.contain_height-kY-(EllipseY1-yMin)*mY;
+                Ellipsex11=(EllipseX1-(xMin-sectionXYStep))*mX+50;
+                EllipseY11=contain_height+50-(EllipseY1-(yMin-sectionXYStep))*mY;
 
-                x00=(x0-xMin)*mX+kX;
-                y00=myEllipse.prototype.Setting.contain_height-kY-(y0-yMin)*mY;
+                x00=(x0-(xMin-sectionXYStep))*mX+50;
+                y00=contain_height+50-(y0-(yMin-sectionXYStep))*mY;
 
                 //与上面算法不一样，因为可能不在xMin,yMin,xMax,yMax里面
-                xt=(xt-(xMin-sectionXStep))*mX;
-                yt=contain_height-((yt-(yMin-sectionYStep))*mY);
-                myEllipse.prototype.Setting.xt=xt;
-                myEllipse.prototype.Setting.yt=yt;
+                // xt=(xt-(xMin-sectionXStep))*mX;
+                // yt=contain_height-((yt-(yMin-sectionYStep))*mY);
+                // myEllipse.prototype.Setting.xt=xt;
+                // myEllipse.prototype.Setting.yt=yt;
                 result=[EllipseX00,EllipseY00,Ellipsex11,EllipseY11,x00,y00];
                 return result;
+        },
+        //单独的xy坐标转换，不依赖任何其他函数
+        importXY:function(xyData){
+            var importX,
+                importY,
+                xMin,
+                yMin,
+                mX,
+                mY,
+                x,
+                y,
+                sectionXYStep,
+                contain_height,
+                importData;
+
+                xMin=this.Setting.xMin;
+                yMin=this.Setting.yMin;
+                mX=this.Setting.mX;
+                mY=this.Setting.mY;
+                sectionXYStep=this.Setting.sectionXYStep;
+                contain_height=this.Setting.contain_height;
+
+                x=xyData[0];
+                y=xyData[1];
+
+
+                //处理一下，超出坐标系区域让他在对应的边角线上面待着
+                x<xMin-sectionXYStep ? xt=xMin-sectionXYStep : x=x;
+                x>xMin+9*sectionXYStep ? xt=xMin+9*sectionXYStep : xt=xt;
+
+                yt<yMin-sectionXYStep ? yt=yMin-sectionXYStep : yt=yt;
+                yt>yMax+9*sectionYStep ? yt=yMax+9*sectionYStep : yt=yt;
+
+                //标准坐标值
+                importX=(x-(xMin-sectionXYStep))*mX+50;
+                importY=contain_height+50-(y0-(yMin-sectionXYStep))*mY;
+                importData=[importX,importY];
+                return importData;
         },
         polygonXY:function(arrData){
 
@@ -618,7 +658,7 @@
         var aa=new myEllipse();
         aa.drawMain("main",arrDataAll);
         // aa.removeData('polygon1');
-        aa.addData(arrData);
+        //aa.addData(arrData);
         // aa.removeData('Ellipse1');
     })
     </script>

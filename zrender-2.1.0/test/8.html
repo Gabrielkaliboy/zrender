@@ -3,7 +3,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>增添椭圆和多边</title>
+    <title>更改坐标系，预留两边空白位置</title>
     <script src="https://cdn.bootcss.com/jquery/1.10.2/jquery.js"></script>
     <style>
         #main{
@@ -13,7 +13,8 @@
     <script type="text/javascript" src="../doc/asset/js/esl/esl.js"></script>
 </head>
 <body>
-    <div id="main" style="width:700px;height:700px;"></div>
+    <!-- 最好是按照这个尺寸给！！！ -->
+    <div id="main" style="width:700px;height:600px;"></div>
     <script type="text/javascript">
     arrDataAll=[{
         "type":"Ellipse",
@@ -113,9 +114,9 @@
             //将当前的容器ID值存起来
             this.Setting.divid=divid;
             //获取容器的高度
-            this.Setting.contain_height = $("#" + divid).height();  
+            this.Setting.contain_height = $("#" + divid).height()-100;  
             //获取容器的高度
-            this.Setting.contain_width= $("#" + divid).width();
+            this.Setting.contain_width= $("#" + divid).width()-200;
             //设置边框线条
             $("#"+divid).css({"border":"2px solid #000"});
             //根据获取的容器宽高来设置真实坐标系中每格代表多少像素
@@ -157,23 +158,21 @@
                         var lineXLabelName=myEllipse.prototype.Setting.xMin-sectionXStep;
                         //均分10格，每格多少px
                         var kX=myEllipse.prototype.Setting.kX;
-                        for(var i=0;i<myEllipse.prototype.Setting.contain_width;i++){
+                        for(var i=0;i<myEllipse.prototype.Setting.contain_width+50;i++){
                             //每个格sectionXStep对应kX像素!!
                             if(i%kX==0){
                                 var stepX=i;
                                 //画与y轴平行的辅助线
                                 var lineX = new LineShape({
                                     style:{
-                                        xStart :stepX ,
-                                        yStart : 0,
-                                        xEnd : stepX,
-                                        yEnd : myEllipse.prototype.Setting.contain_height,
+                                        xStart :stepX+50 ,//加50是为了预留padding=50的位置
+                                        yStart : 50,
+                                        xEnd : stepX+50,
+                                        yEnd : myEllipse.prototype.Setting.contain_height+50,
                                         strokeColor : '#BFBFBF',   // == color
                                         lineWidth : 2,
                                         lineCap : 'butt',
                                         lineType : 'dotted',
-                                        text:stepX,
-                                        textPosition:'end'
                                     },
                                 });
                                 zr.addShape(lineX);
@@ -184,8 +183,8 @@
                                 var lineXName=lineXLabelName.toFixed(3);
                                 var lineXLabel = new TextShape({
                                     style:{
-                                        x : stepX+33,//+15让他往右一点,加的越多越往右
-                                        y : myEllipse.prototype.Setting.contain_height-8,//-8让他往上移点
+                                        x : stepX+50+10,//+30让他往右一点,加的越多越往右
+                                        y : myEllipse.prototype.Setting.contain_height+50+15,//-8让他往上移点
                                         brushType : 'both',
                                         color : '#000',
                                         strokeColor : '#000',
@@ -208,15 +207,15 @@
                         var lineYLabelName=myEllipse.prototype.Setting.yMin-sectionYStep;
                         //均分10格，每格多少px
                         var kY=myEllipse.prototype.Setting.kY;
-                        for(var m=0;m<myEllipse.prototype.Setting.contain_height;m++){
+                        for(var m=0;m<myEllipse.prototype.Setting.contain_height+50;m++){
                             if(m%kY == 0){
                                 var stepY=m;
                                 var lineY = new LineShape({
                                     style:{
-                                        xStart :0 ,
-                                        yStart : myEllipse.prototype.Setting.contain_height-stepY,
-                                        xEnd : myEllipse.prototype.Setting.contain_width,
-                                        yEnd : myEllipse.prototype.Setting.contain_height-stepY,
+                                        xStart :50 ,
+                                        yStart : myEllipse.prototype.Setting.contain_height-stepY+50,
+                                        xEnd : myEllipse.prototype.Setting.contain_width+50,
+                                        yEnd : myEllipse.prototype.Setting.contain_height-stepY+50,
                                         strokeColor : '#BFBFBF',   // == color
                                         lineWidth : 2,
                                         lineCap : 'butt',
@@ -232,8 +231,8 @@
                                 var lineYName=lineYLabelName.toFixed(3);
                                 var lineYLabel = new TextShape({
                                     style:{
-                                        x : 0+20,//+15让他往右一点
-                                        y : myEllipse.prototype.Setting.contain_height-stepY-43,//整体向上移动40px
+                                        x : 50-20,//50位预留padding，-20为了让脚标在y轴左侧
+                                        y : myEllipse.prototype.Setting.contain_height-stepY+50,//整体向上移动40px
                                         brushType : 'both',
                                         color : '#000',
                                         strokeColor : '#000',
@@ -354,7 +353,7 @@
                                         y : seriesNameY,//整体向上移动40px
                                         brushType : 'both',
                                         color : randomColor,
-                                        textFont : 'bold 16px Arial',
+                                        textFont : 'normal 12px Arial',
                                         strokeColor : randomColor,
                                         lineWidth : 1,
                                         text : seriesName,
