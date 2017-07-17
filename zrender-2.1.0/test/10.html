@@ -154,9 +154,7 @@
                     myEllipse.prototype.DrawTrend=function(arrData){
 
                         //画与y轴平行
-                        var sectionXYStep=(Math.ceil((this.Setting.sectionXYStep.toFixed(5))*1000))/1000;
-                        //我修改了sectionXStep,我在把它设置回全局,目的是为了后面画圆的时候知道一个格对应多少像素
-                        this.sectionXYStep=sectionXYStep;
+                        var sectionXYStep=this.Setting.sectionXYStep;
                         var lineXLabelName=this.Setting.xMin-2*sectionXYStep;
                         //均分10格，每格多少px
                         var kX=this.Setting.kX;
@@ -261,14 +259,14 @@
 
 
 
-                        //画椭圆 arrData传进来的参数就是数据
+                        //画椭圆和多边形 arrData传进来的参数就是数据
                         var arrDataAll=this.Setting.arrDataAll;
                         //用来做文本偏移的
                         var seriesNameY=0;
                         for(var j=0;j<arrDataAll.length;j++){
                             //筛选椭圆的数据
                             //seriesNameY让他每次下移20px
-                            seriesNameY=seriesNameY+10;
+                            seriesNameY=seriesNameY+15;
                             //颜色做随机处理
                             var randomColor='#'+Math.floor(Math.random()*0xffffff).toString(16);
                             if(arrDataAll[j].type=="Ellipse"){
@@ -358,12 +356,65 @@
                                 var polygonData=arrDataAll[j].data,
                                     seriesName=arrDataAll[j].name;
                                     //坐标还未转换
-                                    for(n=0;n<=polygonData.length;n++){
+                                    for(n=0;n<=polygonData.length-2;n++){
                                         //因为有前后坐标的，这样处理不行的。7.17
-                                        var xyData=polygonData[n];
+                                        var xyData1=polygonData[n],
+                                            xyData2=polygonData[n+1];
                                         //调用坐标转换函数，得到转换后的xy值
-                                        var polygonResult=this.importXY(xyData);
+                                        var polygonResult1=this.importXY(xyData1),
+                                            polygonResult2=this.importXY(xyData2);
+                                        //画多边形
+                                        var polygon = new LineShape({
+                                            style:{
+                                                xStart :polygonResult1[0] ,
+                                                yStart : polygonResult1[1],
+                                                xEnd : polygonResult2[0],
+                                                yEnd : polygonResult2[1],
+                                                strokeColor : randomColor,   // == color
+                                                lineWidth :2 ,
+                                                lineCap : 'butt',
+                                                lineType : 'solid',
+                                            },
+                                        });
+                                        zr.addShape(polygon);
+
+                                        //处理一下末尾到首位
+                                        var xyDataStart=polygonData[0],
+                                        xyDataEnd=polygonData[polygonData.length-1],
+                                        StartResult=this.importXY(xyDataStart),
+                                        xyDataEnd=this.importXY(xyDataEnd);
+
+                                        var StartEnd = new LineShape({
+                                            style:{
+                                                xStart :xyDataEnd[0] ,
+                                                yStart : xyDataEnd[1],
+                                                xEnd : StartResult[0],
+                                                yEnd : StartResult[1],
+                                                strokeColor : randomColor,   // == color
+                                                lineWidth :2 ,
+                                                lineCap : 'butt',
+                                                lineType : 'solid',
+                                            },
+                                        });
+                                        zr.addShape(StartEnd);
                                     }
+                                    //加文本
+                                    var polygonName = new TextShape({
+                                        style:{
+                                            x : this.Setting.contain_width+120,
+                                            y : seriesNameY,//整体向上移动40px
+                                            brushType : 'both',
+                                            color : randomColor,
+                                            textFont : 'normal 12px Arial',
+                                            strokeColor : randomColor,
+                                            lineWidth : 1,
+                                            text : seriesName,
+                                            textPosition:"top",
+                                            textAlign:"center"
+                                        },
+                                    });
+                                    zr.addShape(polygonName);
+
                             }
                         };
 
@@ -540,6 +591,7 @@
             sectionXStep=sectionX/8;
             sectionYStep=sectionY/8;
             sectionXYStep=Math.max(sectionXStep,sectionYStep);
+            sectionXYStep=(Math.ceil((sectionXYStep.toFixed(5))*1000))/1000;
 
             this.Setting.xMin=xMin;
             this.Setting.xMax=xMax;
@@ -638,28 +690,31 @@
 
 
                 //处理一下，超出坐标系区域让他在对应的边角线上面待着
-                x<xMin-sectionXYStep ? xt=xMin-sectionXYStep : x=x;
-                x>xMin+9*sectionXYStep ? xt=xMin+9*sectionXYStep : xt=xt;
+                x<xMin-sectionXYStep ? x=xMin-sectionXYStep : x=x;
+                x>xMin+9*sectionXYStep ? x=xMin+9*sectionXYStep : x=x;
 
-                yt<yMin-sectionXYStep ? yt=yMin-sectionXYStep : yt=yt;
-                yt>yMax+9*sectionYStep ? yt=yMax+9*sectionYStep : yt=yt;
+                y<yMin-sectionXYStep ? y=yMin-sectionXYStep : y=y;
+                y>yMin+9*sectionXYStep ? y=yMin+9*sectionXYStep : y=y;
 
                 //标准坐标值
                 importX=(x-(xMin-sectionXYStep))*mX+50;
-                importY=contain_height+50-(y0-(yMin-sectionXYStep))*mY;
+                importY=contain_height+50-(y-(yMin-sectionXYStep))*mY;
                 importData=[importX,importY];
                 return importData;
         },
-        polygonXY:function(arrData){
-
+        peopleXY:function(xyData){
+            var xyData=this.importXY(xyData);
+                this.Setting.xt=xyData[0];
+                this.Setting.yt=xyData[1];
         },
     };
     $(function(){
         var aa=new myEllipse();
         aa.drawMain("main",arrDataAll);
-        // aa.removeData('polygon1');
-        //aa.addData(arrData);
-        // aa.removeData('Ellipse1');
+        // aa.removeData('polygon1');//用来实现移除某点
+        //aa.addData(arrData);//用来实现增加某点
+        //aa.removeData('Ellipse1');
+        aa.peopleXY([0.42,0.425]);//用来设置用户输入的点
     })
     </script>
 
