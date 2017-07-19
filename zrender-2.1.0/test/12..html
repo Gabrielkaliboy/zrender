@@ -82,8 +82,12 @@
             kY:null,
             mX:null,//1比例的输入值对应的网页中的像素
             mY:null,
-            xt:null,//用户输入的坐标与SDCM相关
+            xt:null,//用户输入的已转化坐标与SDCM相关
             yt:null,
+            xtUn:null,//用户输入未转化的原xy坐标
+            ytUn:null,
+            ellipseOne:null,//用来存放单个椭圆的所有数据，与SDCM有关
+            SDCM:null,
 
             arrDataAll:[],//所有数据存储位置
             divid:null,//存储容器的id值
@@ -128,6 +132,10 @@
             this.Setting.kY=this.Setting.contain_height/10;
             //将第一次传输的数据存一份到arrDataAll
             this.Setting.arrDataAll=arrData;
+            //如果arrDataAll里面只有一个对象，且是椭圆类型，将其中心点坐标存在setting里面，方便后面计算SDCM
+            if(this.Setting.arrDataAll.length==1 && this.Setting.arrDataAll[0].type=="Ellipse"){
+                this.Setting.ellipseOne=arrDataAll[0].data;
+            }
             //初始化设置一下最大最小以及步长,将用户输入的xt,yt顺便存一份，还有计算出来的SDCM
             if(arrData !==undefined && arrData!==null){
                 this.XYAxis();
@@ -244,28 +252,44 @@
                             }
                         };
 
-                        // //画SDCM
-                        // var SCDMLabelName=myEllipse.prototype.Setting.SDCM+"  SCDM";
-                        // var SCDMLabel = new TextShape({
-                        //     style:{
-                        //         x : myEllipse.prototype.Setting.contain_width/2,//
-                        //         y : 15,//整体向上移动40px
-                        //         brushType : 'both',
-                        //         color : '#000',
-                        //         textFont : 'bold 25px Arial',
-                        //         strokeColor : '#000',
-                        //         lineWidth : 1,
-                        //         text : SCDMLabelName,
-                        //         textPosition:"top",
-                        //         textAlign:"center"
-                        //     },
-                        // });
-                        // zr.addShape(SCDMLabel);
+                        //画SDCM以及X,Y坐标说明
+                        if(this.Setting.SDCM !==null){
+                            //画提示信息
+                            var tips="x = "+this.Setting.xtUn+"  y = "+this.Setting.ytUn;
+                            var tipsLabel = new TextShape({
+                                style:{
+                                    x : this.Setting.contain_width+125,
+                                    y : (this.Setting.contain_height+100)/2-60,//
+                                    brushType : 'both',
+                                    color : '#000',
+                                    textFont : 'normal 15px Arial',
+                                    strokeColor : '#000',
+                                    lineWidth : 1,
+                                    text : tips,
+                                    textPosition:"top",
+                                    textAlign:"center"
+                                }
+                            });
+                            zr.addShape(tipsLabel);
 
-
-
-
-
+                            //画SDCM
+                            var SCDMLabelName="SDCM = "+this.Setting.SDCM;
+                            var SCDMLabel = new TextShape({
+                                style:{
+                                    x : this.Setting.contain_width+120,
+                                    y : (this.Setting.contain_height+100)/2-30,//
+                                    brushType : 'both',
+                                    color : '#000',
+                                    textFont : 'normal 15px Arial',
+                                    strokeColor : '#000',
+                                    lineWidth : 1,
+                                    text : SCDMLabelName,
+                                    textPosition:"top",
+                                    textAlign:"center"
+                                },
+                            });
+                            zr.addShape(SCDMLabel);
+                        }
                         //画椭圆和多边形 arrData传进来的参数就是数据
                         var arrDataAll=this.Setting.arrDataAll;
                         //用来做文本偏移的
@@ -343,6 +367,7 @@
                                     zr.addShape(EllipseX1Y1);
                                 };
 
+                                //仅有一个图像的时候，我让他的标题在中间位置
                                 if(arrDataAll.length==1){
                                     //加文本
                                     var seriesNameShape = new TextShape({
@@ -552,13 +577,7 @@
                 EllipseX1=x0+r12*cosAngle;
                 EllipseY1=y0+r12*sinAngle;
 
-                //计算当前标准下的sdcm值
-                SDCM=100*Math.sqrt(g11*Math.pow((xt-x0),2)+2*g12*(xt-x0)*(yt-y0)+g22*Math.pow((yt-y0),2));
-
-                //保留四位小数，后期根据需求再改，我要把它写在每个椭圆的圆心周围
-                SDCM=SDCM.toFixed(4);
-
-                var result=[EllipseX0,EllipseY0,EllipseX1,EllipseY1,x0,y0,SDCM];
+                var result=[EllipseX0,EllipseY0,EllipseX1,EllipseY1,x0,y0];
                 return result;
 
         },
@@ -716,8 +735,14 @@
                 yMin,
                 mX,
                 mY,
-                x,
+                x,//输入点
                 y,
+                x0,//中心点
+                y0,
+                g11,
+                g12,
+                g22,
+                SDCM,
                 sectionXYStep,
                 contain_height,
                 importData;
@@ -732,6 +757,22 @@
                 x=xyData[0];
                 y=xyData[1];
 
+                //在更改xy的值之前，先把当前的xy所对应的SDCM值计算出来
+                var ellipseOne=this.Setting.ellipseOne;
+                if(ellipseOne !==null){
+                    x0=ellipseOne.x0;
+                    y0=ellipseOne.y0;
+                    g11=ellipseOne.g11;
+                    g12=ellipseOne.g12;
+                    g22=ellipseOne.g22;
+                    this.Setting.xtUn=x;//我想在显示SDCM的时候告诉用户他输入的xy坐标值
+                    this.Setting.ytUn=y;
+                    SDCM=100*Math.sqrt(g11*Math.pow((x-x0),2)+2*g12*(x-x0)*(y-y0)+g22*Math.pow((y-y0),2));
+
+                    //保留四位小数，后期根据需求再改，我要把它写在每个椭圆的圆心周围
+                    SDCM=SDCM.toFixed(1);
+                    this.Setting.SDCM=SDCM;
+                }
 
                 //处理一下，超出坐标系区域让他在对应的边角线上面待着
                 // x<xMin-sectionXYStep ? x=xMin-sectionXYStep : x=x;
@@ -739,7 +780,7 @@
 
                 // y<yMin-sectionXYStep ? y=yMin-sectionXYStep : y=y;
                 // y>yMin+9*sectionXYStep ? y=yMin+9*sectionXYStep : y=y;
-
+                
                 x = x < xMin-sectionXYStep ? xMin-sectionXYStep:x;
                 x = x > xMin+9*sectionXYStep ? xMin+9*sectionXYStep:x;
                 y = y < yMin-sectionXYStep ? yMin-sectionXYStep:y;
@@ -759,11 +800,11 @@
     $(function(){
         var aa=new myEllipse();
         //aa.drawMain("main");
-        aa.drawMain("main",arrDataAll,1);
+        aa.drawMain("main",arrDataAll,0);//第一个是容器，第二个是数据，如果没有就填null，第三个是是否显示坐标轴坐标
         aa.removeData('polygon1');//用来实现移除某点
         //aa.addData(arrData);//用来实现增加某点
         //aa.removeData('Ellipse1');
-        aa.peopleXY([0.41,0.3]);//用来设置用户输入的点
+        aa.peopleXY([0.476,0.401]);//用来设置用户输入的点,并且只有单个椭圆的时候才会绘制SDCM
     })
     </script>
 
