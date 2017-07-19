@@ -36,7 +36,7 @@
         "name":"C78.377_2700K"  
     }]
     //6500k
-    var arrData={
+    var arrData=[{
         "type":"Ellipse",
         "dataId":"Ellipse2",
         "data":{
@@ -49,16 +49,16 @@
             "r2":6,//必须是大的！
         },
         "name":"C78.376_6500K"
-    };
+    }];
     function myEllipse(){
 
     };
     myEllipse.prototype={
         //new完毕以后必须首先调用这个函数进行初始化
-        drawMain:function(divid,arrData){
+        drawMain:function(divid,arrData,showOrNot){
             //new出来对象以后，调用这个函数初始化画图，再往里面增减图像的时候
             //再调用addData或者removeData
-            this.Mainclass(divid,arrData);
+            this.Mainclass(divid,arrData,showOrNot);
         },
         Setting:{
             //初始值
@@ -69,15 +69,15 @@
             contain_width:200,//容器宽
             contain_height:200,//容器高
             //arrData:arrData,//传入的数据(启用arrDataAll,这个暂停使用)
-            xMin:null,//最大最小值
+            xMin:0.1,//最大最小值
             xMax:null,
             yMax:null,
-            yMin:null, 
+            yMin:0.1, 
             sectionX:null,//xy轴最大最小值之差
             sectionY:null,
             sectionXStep:null,//xy轴按照8份分割，每份的步数值
             sectionYStep:null,
-            sectionXYStep:null,//统一xy坐标轴的步数值，取上面两个的最大值
+            sectionXYStep:0.1,//统一xy坐标轴的步数值，取上面两个的最大值
             kX:null,//每个格多少像素
             kY:null,
             mX:null,//1比例的输入值对应的网页中的像素
@@ -87,6 +87,7 @@
 
             arrDataAll:[],//所有数据存储位置
             divid:null,//存储容器的id值
+            showOrNot:1,//存储showOrNot值
         },
         //如果是加入数据
         addData:function(arrData){
@@ -111,7 +112,9 @@
                 //调用Mainclass函数重绘
                 this.Mainclass(divid,arrData);
         },
-        Mainclass:function(divid,arrData){
+        Mainclass:function(divid,arrData,showOrNot){
+            //存储一下showOrNot值
+            this.Setting.showOrNot=showOrNot;
             //将当前的容器ID值存起来
             this.Setting.divid=divid;
             //获取容器的高度
@@ -126,7 +129,9 @@
             //将第一次传输的数据存一份到arrDataAll
             this.Setting.arrDataAll=arrData;
             //初始化设置一下最大最小以及步长,将用户输入的xt,yt顺便存一份，还有计算出来的SDCM
-            this.XYAxis();
+            if(arrData !==undefined && arrData!==null){
+                this.XYAxis();
+            }
             //顺序不能变，必须先初始XYAxis函数，否则sectionXYStep是null
             //不用管sectionXStep小数点好几位，因为后面用的时候被我处理掉了
             //mX和mY还是比例尺
@@ -152,7 +157,6 @@
                     // 初始化zrender
                     var zr = zrender.init(document.getElementById(divid));
                     myEllipse.prototype.DrawTrend=function(arrData){
-
                         //画与y轴平行
                         var sectionXYStep=this.Setting.sectionXYStep;
                         var lineXLabelName=this.Setting.xMin-2*sectionXYStep;
@@ -176,23 +180,25 @@
                             });
                             zr.addShape(lineX);
 
-                            //画与y轴平行的辅助线的脚标
-                            lineXLabelName=lineXLabelName+sectionXYStep;
-                            var lineXName=lineXLabelName.toFixed(3);
-                            var lineXLabel = new TextShape({
-                                style:{
-                                    x : stepX,//+30让他往右一点,加的越多越往右
-                                    y : this.Setting.contain_height+50+15,//-8让他往上移点
-                                    brushType : 'both',
-                                    color : '#000',
-                                    strokeColor : '#000',
-                                    lineWidth : 1,
-                                    text : lineXName,
-                                    textPosition:"top",
-                                    textAlign:"center"
-                                },
-                            });
-                            zr.addShape(lineXLabel);
+                            if(showOrNot){
+                                //画与y轴平行的辅助线的脚标
+                                lineXLabelName=lineXLabelName+sectionXYStep;
+                                var lineXName=lineXLabelName.toFixed(3);
+                                var lineXLabel = new TextShape({
+                                    style:{
+                                        x : stepX,//+30让他往右一点,加的越多越往右
+                                        y : this.Setting.contain_height+50+15,//-8让他往上移点
+                                        brushType : 'both',
+                                        color : '#000',
+                                        strokeColor : '#000',
+                                        lineWidth : 1,
+                                        text : lineXName,
+                                        textPosition:"top",
+                                        textAlign:"center"
+                                    },
+                                });
+                                zr.addShape(lineXLabel);
+                            }
                         };
 
                         //画与x轴平行
@@ -217,25 +223,26 @@
                             });
                             zr.addShape(lineY);
 
-                            //画与x轴平行的辅助线的脚标
-                            lineYLabelName=lineYLabelName+sectionXYStep;
-                            var lineYName=lineYLabelName.toFixed(3);
-                            var lineYLabel = new TextShape({
-                                style:{
-                                    x : 50-20,//50位预留padding，-20为了让脚标在y轴左侧
-                                    y : this.Setting.contain_height+50-stepY,//整体向上移动40px
-                                    brushType : 'both',
-                                    color : '#000',
-                                    strokeColor : '#000',
-                                    lineWidth : 1,
-                                    text : lineYName,
-                                    textPosition:"top",
-                                    textAlign:"center"
-                                },
-                            });
-                            zr.addShape(lineYLabel);
+                            if(showOrNot){
+                                //画与x轴平行的辅助线的脚标
+                                lineYLabelName=lineYLabelName+sectionXYStep;
+                                var lineYName=lineYLabelName.toFixed(3);
+                                var lineYLabel = new TextShape({
+                                    style:{
+                                        x : 50-20,//50位预留padding，-20为了让脚标在y轴左侧
+                                        y : this.Setting.contain_height+50-stepY,//整体向上移动40px
+                                        brushType : 'both',
+                                        color : '#000',
+                                        strokeColor : '#000',
+                                        lineWidth : 1,
+                                        text : lineYName,
+                                        textPosition:"top",
+                                        textAlign:"center"
+                                    },
+                                });
+                                zr.addShape(lineYLabel);
+                            }
                         };
-
 
                         // //画SDCM
                         // var SCDMLabelName=myEllipse.prototype.Setting.SDCM+"  SCDM";
@@ -336,22 +343,41 @@
                                     zr.addShape(EllipseX1Y1);
                                 };
 
-                                //加文本
-                                var seriesNameShape = new TextShape({
-                                    style:{
-                                        x : this.Setting.contain_width+120,
-                                        y : seriesNameY,//整体向上移动40px
-                                        brushType : 'both',
-                                        color : randomColor,
-                                        textFont : 'normal 12px Arial',
-                                        strokeColor : randomColor,
-                                        lineWidth : 1,
-                                        text : seriesName,
-                                        textPosition:"top",
-                                        textAlign:"center"
-                                    },
-                                });
-                                zr.addShape(seriesNameShape);
+                                if(arrDataAll.length==1){
+                                    //加文本
+                                    var seriesNameShape = new TextShape({
+                                        style:{
+                                            x : this.Setting.contain_width+120,
+                                            y : (this.Setting.contain_height+100)/2,////如果就一个图像，我让他显示在中间位置
+                                            brushType : 'both',
+                                            color : randomColor,
+                                            textFont : 'normal 12px Arial',
+                                            strokeColor : randomColor,
+                                            lineWidth : 1,
+                                            text : seriesName,
+                                            textPosition:"top",
+                                            textAlign:"center"
+                                        },
+                                    });
+                                    zr.addShape(seriesNameShape);
+                                }else{
+                                    //加文本
+                                    var seriesNameShape = new TextShape({
+                                        style:{
+                                            x : this.Setting.contain_width+120,
+                                            y : seriesNameY,//整体向上移动40px
+                                            brushType : 'both',
+                                            color : randomColor,
+                                            textFont : 'normal 12px Arial',
+                                            strokeColor : randomColor,
+                                            lineWidth : 1,
+                                            text : seriesName,
+                                            textPosition:"top",
+                                            textAlign:"center"
+                                        },
+                                    });
+                                    zr.addShape(seriesNameShape);
+                                }
                             }else{
                                 var polygonData=arrDataAll[j].data,
                                     seriesName=arrDataAll[j].name;
@@ -399,22 +425,39 @@
                                         zr.addShape(StartEnd);
                                     }
                                     //加文本
-                                    var polygonName = new TextShape({
-                                        style:{
-                                            x : this.Setting.contain_width+120,
-                                            y : seriesNameY,//整体向上移动40px
-                                            brushType : 'both',
-                                            color : randomColor,
-                                            textFont : 'normal 12px Arial',
-                                            strokeColor : randomColor,
-                                            lineWidth : 1,
-                                            text : seriesName,
-                                            textPosition:"top",
-                                            textAlign:"center"
-                                        },
-                                    });
-                                    zr.addShape(polygonName);
-
+                                    if(arrDataAll.length==1){
+                                        var polygonName = new TextShape({
+                                            style:{
+                                                x : this.Setting.contain_width+120,
+                                                y : (this.Setting.contain_height+100)/2,//如果就一个图像，我让他显示在中间位置
+                                                brushType : 'both',
+                                                color : randomColor,
+                                                textFont : 'normal 12px Arial',
+                                                strokeColor : randomColor,
+                                                lineWidth : 1,
+                                                text : seriesName,
+                                                textPosition:"top",
+                                                textAlign:"center"
+                                            },
+                                        });
+                                        zr.addShape(polygonName);
+                                    }else{
+                                        var polygonName = new TextShape({
+                                            style:{
+                                                x : this.Setting.contain_width+120,
+                                                y : seriesNameY,//整体向上移动40px
+                                                brushType : 'both',
+                                                color : randomColor,
+                                                textFont : 'normal 12px Arial',
+                                                strokeColor : randomColor,
+                                                lineWidth : 1,
+                                                text : seriesName,
+                                                textPosition:"top",
+                                                textAlign:"center"
+                                            },
+                                        });
+                                        zr.addShape(polygonName);
+                                    }
                             }
                         };
 
@@ -422,35 +465,36 @@
                         //画用户传进来的那个点
                         var xt=myEllipse.prototype.Setting.xt;
                         var yt=myEllipse.prototype.Setting.yt;
-                        var xtyt11 = new LineShape({
-                            style:{
-                                xStart :xt-1 ,
-                                yStart : yt+1,
-                                xEnd : xt+1,
-                                yEnd : yt-1,
-                                strokeColor : '#FF0000',   // == color
-                                lineWidth :9 ,
-                                lineCap : 'butt',
-                                lineType : 'solid',
-                            },
-                        });
-                        zr.addShape(xtyt11);
+                        if(xt !== null){
+                            var xtyt11 = new LineShape({
+                                style:{
+                                    xStart :xt-1 ,
+                                    yStart : yt+1,
+                                    xEnd : xt+1,
+                                    yEnd : yt-1,
+                                    strokeColor : '#FF0000',   // == color
+                                    lineWidth :9 ,
+                                    lineCap : 'butt',
+                                    lineType : 'solid',
+                                },
+                            });
+                            zr.addShape(xtyt11);
 
-                        //画用户传进来的那个点
-                        var xtyt22 = new LineShape({
-                            style:{
-                                xStart :xt-1 ,
-                                yStart : yt-1,
-                                xEnd : xt+1,
-                                yEnd : yt+1,
-                                strokeColor : '#FF0000',   // == color
-                                lineWidth :9 ,
-                                lineCap : 'butt',
-                                lineType : 'solid',
-                            },
-                        });
-                        zr.addShape(xtyt22);
-
+                            //画用户传进来的那个点
+                            var xtyt22 = new LineShape({
+                                style:{
+                                    xStart :xt-1 ,
+                                    yStart : yt-1,
+                                    xEnd : xt+1,
+                                    yEnd : yt+1,
+                                    strokeColor : '#FF0000',   // == color
+                                    lineWidth :9 ,
+                                    lineCap : 'butt',
+                                    lineType : 'solid',
+                                },
+                            });
+                            zr.addShape(xtyt22);
+                        }
 
                         zr.render();
                     };
@@ -577,10 +621,10 @@
             yMin=resultYTotal[0];
 
             //为了保证一定在这个区间，我又往外扩了0.01
-            xMin=(xMin-0.01).toFixed(2),
-            xMax=(xMax+0.01).toFixed(2),
-            yMin=(yMin-0.01).toFixed(2),
-            yMax=(yMax+0.01).toFixed(2);
+            xMin=parseFloat((xMin-0.01).toFixed(2)),
+            xMax=parseFloat((xMax+0.01).toFixed(2)),
+            yMin=parseFloat((yMin-0.01).toFixed(2)),
+            yMax=parseFloat((yMax+0.01).toFixed(2));
 
             //最大值和最小值之间的差值,sectionX,sectionY偏大行，偏小不行，可能溢出
             //section按8分，网页按10份分，八份点是9，不会超出，如果section是10就吵了，因为点数是11
@@ -690,12 +734,16 @@
 
 
                 //处理一下，超出坐标系区域让他在对应的边角线上面待着
-                x<xMin-sectionXYStep ? x=xMin-sectionXYStep : x=x;
-                x>xMin+9*sectionXYStep ? x=xMin+9*sectionXYStep : x=x;
+                // x<xMin-sectionXYStep ? x=xMin-sectionXYStep : x=x;
+                // x>xMin+9*sectionXYStep ? x=xMin+9*sectionXYStep : x=x;
 
-                y<yMin-sectionXYStep ? y=yMin-sectionXYStep : y=y;
-                y>yMin+9*sectionXYStep ? y=yMin+9*sectionXYStep : y=y;
+                // y<yMin-sectionXYStep ? y=yMin-sectionXYStep : y=y;
+                // y>yMin+9*sectionXYStep ? y=yMin+9*sectionXYStep : y=y;
 
+                x = x < xMin-sectionXYStep ? xMin-sectionXYStep:x;
+                x = x > xMin+9*sectionXYStep ? xMin+9*sectionXYStep:x;
+                y = y < yMin-sectionXYStep ? yMin-sectionXYStep:y;
+                y = y > yMin+9*sectionXYStep ? yMin+9*sectionXYStep:y;
                 //标准坐标值
                 importX=(x-(xMin-sectionXYStep))*mX+50;
                 importY=contain_height+50-(y-(yMin-sectionXYStep))*mY;
@@ -710,11 +758,12 @@
     };
     $(function(){
         var aa=new myEllipse();
-        aa.drawMain("main",arrDataAll);
-        // aa.removeData('polygon1');//用来实现移除某点
+        //aa.drawMain("main");
+        aa.drawMain("main",arrDataAll,1);
+        aa.removeData('polygon1');//用来实现移除某点
         //aa.addData(arrData);//用来实现增加某点
         //aa.removeData('Ellipse1');
-        aa.peopleXY([0.42,0.425]);//用来设置用户输入的点
+        aa.peopleXY([0.41,0.3]);//用来设置用户输入的点
     })
     </script>
 
