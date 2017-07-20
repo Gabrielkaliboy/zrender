@@ -148,10 +148,11 @@ var lineX = new LineShape({
 5. 1个椭圆标准的时候，支持配置显示sdcm和标题
 
 #### SDCM1.js
-对应12.html
+对应12.html升级到zrender3.0
 
 #### 13.html
 修复了12.html中调试过程中的一些已知bug
 
 #### SDCM2.js对应 13.html
+升级到3.0
 
