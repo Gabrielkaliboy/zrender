@@ -156,3 +156,6 @@ var lineX = new LineShape({
 #### SDCM2.js对应 13.html
 升级到3.0
 
+#### SDCM3.js
+在没有椭圆的情况下，移除SDCM值
+
