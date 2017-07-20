@@ -36,7 +36,7 @@
         "name":"C78.377_2700K"  
     }]
     //6500k
-    var arrData={
+    var addData1={
         "type":"Ellipse",
         "dataId":"Ellipse2",
         "data":{
@@ -50,6 +50,35 @@
         },
         "name":"C78.376_6500K"
     };
+    var addData2={
+        "type":"polygon",
+        "dataId":"polygon2",
+        "data":[[0.456,0.434],[0.456,0.452],[0.465,0.452],[0.465,0.443],[0.460,0.438]],
+        "name":"C78.377_2700K"  
+    };
+    //6500k
+    var arrDataAll1=[{
+        "type":"Ellipse",
+        "dataId":"Ellipse2",
+        "data":{
+            "g11":86,
+            "g12":-40,
+            "g22":45,
+            "x0":0.313,//椭圆中心点坐标
+            "y0":0.337,
+            "r1":5,
+            "r2":6,//必须是大的！
+        },
+        "name":"C78.376_6500K"
+    }];
+
+    var arrDataAll2=[{
+    "type":"polygon",
+    "dataId":"polygon2",
+    "data":[[0.456,0.434],[0.456,0.452],[0.465,0.452],[0.465,0.443],[0.460,0.435]],
+    "name":"C78.377_2700K"  
+    }];
+    //初始化的时候数据是数组格式，单个增加的时候是{}对象格式添加
     function myEllipse(){
 
     };
@@ -98,9 +127,10 @@
                 //直接将加入的数据塞进总数据接口进行保存
                 this.Setting.arrDataAll.push(arrData);
                 var divid=this.Setting.divid,
+                    showOrNot=this.Setting.showOrNot,
                     arrData=this.Setting.arrDataAll;
                 //调用Mainclass函数重绘
-                this.Mainclass(divid,arrData);
+                this.Mainclass(divid,arrData,showOrNot);
         },
         //如果是删除数据,需要调用这个方法，并且传入数据的id进来
         removeData:function(dataId){
@@ -112,9 +142,10 @@
                 }
             }
             var divid=this.Setting.divid,
+                showOrNot=this.Setting.showOrNot,
                 arrData=this.Setting.arrDataAll;
                 //调用Mainclass函数重绘
-                this.Mainclass(divid,arrData);
+                this.Mainclass(divid,arrData,showOrNot);
         },
         Mainclass:function(divid,arrData,showOrNot){
             //存储一下showOrNot值
@@ -132,12 +163,18 @@
             this.Setting.kY=this.Setting.contain_height/10;
             //将第一次传输的数据存一份到arrDataAll
             this.Setting.arrDataAll=arrData;
+            //重置xmin,ymin,xystep
+            this.Setting.xMin=0.1;
+            this.Setting.yMin=0.1;
+            this.Setting.sectionXYStep=0.1;
+            //重置ellipseOne
+            this.Setting.ellipseOne=null;
             //如果arrDataAll里面只有一个对象，且是椭圆类型，将其中心点坐标存在setting里面，方便后面计算SDCM
-            if(this.Setting.arrDataAll.length==1 && this.Setting.arrDataAll[0].type=="Ellipse"){
+            if(this.Setting.arrDataAll !==null && this.Setting.arrDataAll.length==1 && this.Setting.arrDataAll[0].type=="Ellipse"){
                 this.Setting.ellipseOne=arrDataAll[0].data;
             }
             //初始化设置一下最大最小以及步长,将用户输入的xt,yt顺便存一份，还有计算出来的SDCM
-            if(arrData !==undefined && arrData!==null){
+            if(arrData !==undefined && arrData!==null && arrData.length !=0){
                 this.XYAxis();
             }
             //顺序不能变，必须先初始XYAxis函数，否则sectionXYStep是null
@@ -292,169 +329,89 @@
                         }
                         //画椭圆和多边形 arrData传进来的参数就是数据
                         var arrDataAll=this.Setting.arrDataAll;
-                        //用来做文本偏移的
-                        var seriesNameY=0;
-                        for(var j=0;j<arrDataAll.length;j++){
-                            //筛选椭圆的数据
-                            //seriesNameY让他每次下移20px
-                            seriesNameY=seriesNameY+15;
-                            //颜色做随机处理
-                            var randomColor='#'+Math.floor(Math.random()*0xffffff).toString(16);
-                            if(arrDataAll[j].type=="Ellipse"){
-                                var ellipseData=arrDataAll[j].data,
-                                    seriesName=arrDataAll[j].name;
-                                for(var angle=0;angle<360;angle++){
-                                    var result=this.XYTransition(ellipseData,angle);
-                                    //小圆
-                                    var EllipseDotLittle = new LineShape({
-                                        style:{
-                                            xStart :result[0],
-                                            yStart :result[1],
-                                            xEnd : result[0]+1,
-                                            yEnd : result[1]+1,
-                                            strokeColor : randomColor,   // == color
-                                            lineWidth : 2,
-                                            lineCap : 'butt',
-                                            lineType : 'solid',
-                                        },
-                                    });
-                                    zr.addShape(EllipseDotLittle);
-
-                                    //大圆
-                                    var EllipseDotBig = new LineShape({
-                                        style:{
-                                            xStart :result[2],
-                                            yStart :result[3],
-                                            xEnd : result[2]+1,
-                                            yEnd : result[3]+1,
-                                            brushType:"stroke",
-                                            strokeColor : randomColor,   // == color
-                                            lineWidth : 2,
-                                            lineCap : 'butt',
-                                            lineType : 'solid',
-                                        },
-                                    });
-                                    zr.addShape(EllipseDotBig);
-
-                                    //画中心点
-                                    var EllipseX0Y0 = new LineShape({
-                                        style:{
-                                            xStart :result[4]-1 ,
-                                            yStart : result[5]+1,
-                                            xEnd : result[4]+1,
-                                            yEnd : result[5]-1,
-                                            strokeColor : randomColor,   // == color
-                                            lineWidth :4 ,
-                                            lineCap : 'butt',
-                                            lineType : 'solid',
-                                        },
-                                    });
-                                    zr.addShape(EllipseX0Y0);
-
-                                    //画中心点
-                                    var EllipseX1Y1 = new LineShape({
-                                        style:{
-                                            xStart :result[4]-1 ,
-                                            yStart : result[5]-1,
-                                            xEnd : result[4]+1,
-                                            yEnd : result[5]+1,
-                                            strokeColor : randomColor,   // == color
-                                            lineWidth :4 ,
-                                            lineCap : 'butt',
-                                            lineType : 'solid',
-                                        },
-                                    });
-                                    zr.addShape(EllipseX1Y1);
-                                };
-
-                                //仅有一个图像的时候，我让他的标题在中间位置
-                                if(arrDataAll.length==1){
-                                    //加文本
-                                    var seriesNameShape = new TextShape({
-                                        style:{
-                                            x : this.Setting.contain_width+120,
-                                            y : (this.Setting.contain_height+100)/2,////如果就一个图像，我让他显示在中间位置
-                                            brushType : 'both',
-                                            color : randomColor,
-                                            textFont : 'normal 12px Arial',
-                                            strokeColor : randomColor,
-                                            lineWidth : 1,
-                                            text : seriesName,
-                                            textPosition:"top",
-                                            textAlign:"center"
-                                        },
-                                    });
-                                    zr.addShape(seriesNameShape);
-                                }else{
-                                    //加文本
-                                    var seriesNameShape = new TextShape({
-                                        style:{
-                                            x : this.Setting.contain_width+120,
-                                            y : seriesNameY,//整体向上移动40px
-                                            brushType : 'both',
-                                            color : randomColor,
-                                            textFont : 'normal 12px Arial',
-                                            strokeColor : randomColor,
-                                            lineWidth : 1,
-                                            text : seriesName,
-                                            textPosition:"top",
-                                            textAlign:"center"
-                                        },
-                                    });
-                                    zr.addShape(seriesNameShape);
-                                }
-                            }else{
-                                var polygonData=arrDataAll[j].data,
-                                    seriesName=arrDataAll[j].name;
-                                    //坐标还未转换
-                                    for(n=0;n<=polygonData.length-2;n++){
-                                        //因为有前后坐标的，这样处理不行的。7.17
-                                        var xyData1=polygonData[n],
-                                            xyData2=polygonData[n+1];
-                                        //调用坐标转换函数，得到转换后的xy值
-                                        var polygonResult1=this.importXY(xyData1),
-                                            polygonResult2=this.importXY(xyData2);
-                                        //画多边形
-                                        var polygon = new LineShape({
+                        if(arrDataAll !==null && arrDataAll.length !==0){
+                            //用来做文本偏移的
+                            var seriesNameY=0;
+                            for(var j=0;j<arrDataAll.length;j++){
+                                //筛选椭圆的数据
+                                //seriesNameY让他每次下移20px
+                                seriesNameY=seriesNameY+15;
+                                //颜色做随机处理
+                                var randomColor='#'+Math.floor(Math.random()*0xffffff).toString(16);
+                                if(arrDataAll[j].type=="Ellipse"){
+                                    var ellipseData=arrDataAll[j].data,
+                                        seriesName=arrDataAll[j].name;
+                                    for(var angle=0;angle<360;angle++){
+                                        var result=this.XYTransition(ellipseData,angle);
+                                        //小圆
+                                        var EllipseDotLittle = new LineShape({
                                             style:{
-                                                xStart :polygonResult1[0] ,
-                                                yStart : polygonResult1[1],
-                                                xEnd : polygonResult2[0],
-                                                yEnd : polygonResult2[1],
+                                                xStart :result[0],
+                                                yStart :result[1],
+                                                xEnd : result[0]+1,
+                                                yEnd : result[1]+1,
                                                 strokeColor : randomColor,   // == color
-                                                lineWidth :2 ,
+                                                lineWidth : 2,
                                                 lineCap : 'butt',
                                                 lineType : 'solid',
                                             },
                                         });
-                                        zr.addShape(polygon);
+                                        zr.addShape(EllipseDotLittle);
 
-                                        //处理一下末尾到首位
-                                        var xyDataStart=polygonData[0],
-                                        xyDataEnd=polygonData[polygonData.length-1],
-                                        StartResult=this.importXY(xyDataStart),
-                                        xyDataEnd=this.importXY(xyDataEnd);
-
-                                        var StartEnd = new LineShape({
+                                        //大圆
+                                        var EllipseDotBig = new LineShape({
                                             style:{
-                                                xStart :xyDataEnd[0] ,
-                                                yStart : xyDataEnd[1],
-                                                xEnd : StartResult[0],
-                                                yEnd : StartResult[1],
+                                                xStart :result[2],
+                                                yStart :result[3],
+                                                xEnd : result[2]+1,
+                                                yEnd : result[3]+1,
+                                                brushType:"stroke",
                                                 strokeColor : randomColor,   // == color
-                                                lineWidth :2 ,
+                                                lineWidth : 2,
                                                 lineCap : 'butt',
                                                 lineType : 'solid',
                                             },
                                         });
-                                        zr.addShape(StartEnd);
-                                    }
-                                    //加文本
+                                        zr.addShape(EllipseDotBig);
+
+                                        //画中心点
+                                        var EllipseX0Y0 = new LineShape({
+                                            style:{
+                                                xStart :result[4]-1 ,
+                                                yStart : result[5]+1,
+                                                xEnd : result[4]+1,
+                                                yEnd : result[5]-1,
+                                                strokeColor : randomColor,   // == color
+                                                lineWidth :4 ,
+                                                lineCap : 'butt',
+                                                lineType : 'solid',
+                                            },
+                                        });
+                                        zr.addShape(EllipseX0Y0);
+
+                                        //画中心点
+                                        var EllipseX1Y1 = new LineShape({
+                                            style:{
+                                                xStart :result[4]-1 ,
+                                                yStart : result[5]-1,
+                                                xEnd : result[4]+1,
+                                                yEnd : result[5]+1,
+                                                strokeColor : randomColor,   // == color
+                                                lineWidth :4 ,
+                                                lineCap : 'butt',
+                                                lineType : 'solid',
+                                            },
+                                        });
+                                        zr.addShape(EllipseX1Y1);
+                                    };
+
+                                    //仅有一个图像的时候，我让他的标题在中间位置
                                     if(arrDataAll.length==1){
-                                        var polygonName = new TextShape({
+                                        //加文本
+                                        var seriesNameShape = new TextShape({
                                             style:{
                                                 x : this.Setting.contain_width+120,
-                                                y : (this.Setting.contain_height+100)/2,//如果就一个图像，我让他显示在中间位置
+                                                y : (this.Setting.contain_height+100)/2,////如果就一个图像，我让他显示在中间位置
                                                 brushType : 'both',
                                                 color : randomColor,
                                                 textFont : 'normal 12px Arial',
@@ -465,9 +422,10 @@
                                                 textAlign:"center"
                                             },
                                         });
-                                        zr.addShape(polygonName);
+                                        zr.addShape(seriesNameShape);
                                     }else{
-                                        var polygonName = new TextShape({
+                                        //加文本
+                                        var seriesNameShape = new TextShape({
                                             style:{
                                                 x : this.Setting.contain_width+120,
                                                 y : seriesNameY,//整体向上移动40px
@@ -481,10 +439,91 @@
                                                 textAlign:"center"
                                             },
                                         });
-                                        zr.addShape(polygonName);
+                                        zr.addShape(seriesNameShape);
                                     }
-                            }
-                        };
+                                }else{
+                                    var polygonData=arrDataAll[j].data,
+                                        seriesName=arrDataAll[j].name;
+                                        //坐标还未转换
+                                        for(n=0;n<=polygonData.length-2;n++){
+                                            //因为有前后坐标的，这样处理不行的。7.17
+                                            var xyData1=polygonData[n],
+                                                xyData2=polygonData[n+1];
+                                            //调用坐标转换函数，得到转换后的xy值
+                                            var polygonResult1=this.importXY(xyData1),
+                                                polygonResult2=this.importXY(xyData2);
+                                            //画多边形
+                                            var polygon = new LineShape({
+                                                style:{
+                                                    xStart :polygonResult1[0] ,
+                                                    yStart : polygonResult1[1],
+                                                    xEnd : polygonResult2[0],
+                                                    yEnd : polygonResult2[1],
+                                                    strokeColor : randomColor,   // == color
+                                                    lineWidth :2 ,
+                                                    lineCap : 'butt',
+                                                    lineType : 'solid',
+                                                },
+                                            });
+                                            zr.addShape(polygon);
+
+                                            //处理一下末尾到首位
+                                            var xyDataStart=polygonData[0],
+                                            xyDataEnd=polygonData[polygonData.length-1],
+                                            StartResult=this.importXY(xyDataStart),
+                                            xyDataEnd=this.importXY(xyDataEnd);
+
+                                            var StartEnd = new LineShape({
+                                                style:{
+                                                    xStart :xyDataEnd[0] ,
+                                                    yStart : xyDataEnd[1],
+                                                    xEnd : StartResult[0],
+                                                    yEnd : StartResult[1],
+                                                    strokeColor : randomColor,   // == color
+                                                    lineWidth :2 ,
+                                                    lineCap : 'butt',
+                                                    lineType : 'solid',
+                                                },
+                                            });
+                                            zr.addShape(StartEnd);
+                                        }
+                                        //加文本
+                                        if(arrDataAll.length==1){
+                                            var polygonName = new TextShape({
+                                                style:{
+                                                    x : this.Setting.contain_width+120,
+                                                    y : (this.Setting.contain_height+100)/2,//如果就一个图像，我让他显示在中间位置
+                                                    brushType : 'both',
+                                                    color : randomColor,
+                                                    textFont : 'normal 12px Arial',
+                                                    strokeColor : randomColor,
+                                                    lineWidth : 1,
+                                                    text : seriesName,
+                                                    textPosition:"top",
+                                                    textAlign:"center"
+                                                },
+                                            });
+                                            zr.addShape(polygonName);
+                                        }else{
+                                            var polygonName = new TextShape({
+                                                style:{
+                                                    x : this.Setting.contain_width+120,
+                                                    y : seriesNameY,//整体向上移动40px
+                                                    brushType : 'both',
+                                                    color : randomColor,
+                                                    textFont : 'normal 12px Arial',
+                                                    strokeColor : randomColor,
+                                                    lineWidth : 1,
+                                                    text : seriesName,
+                                                    textPosition:"top",
+                                                    textAlign:"center"
+                                                },
+                                            });
+                                            zr.addShape(polygonName);
+                                        }
+                                }
+                            };
+                        }
 
 
                         //画用户传进来的那个点
@@ -800,11 +839,12 @@
     $(function(){
         var aa=new myEllipse();
         //aa.drawMain("main");
-        aa.drawMain("main",arrDataAll,0);//第一个是容器，第二个是数据，如果没有就填null，第三个是是否显示坐标轴坐标
+        aa.drawMain("main",arrDataAll,1);//第一个是容器，第二个是数据，如果没有就填null或者空数组，第三个是是否显示坐标轴坐标
         aa.removeData('polygon1');//用来实现移除某点
-        aa.addData(arrData);//用来实现增加某点
-        //aa.removeData('Ellipse1');
-        aa.peopleXY([0.476,0.401]);//用来设置用户输入的点,并且只有单个椭圆的时候才会绘制SDCM
+        //aa.addData(addData);//用来实现增加某点,addData必须是{}对象，不能是数组
+        aa.removeData('Ellipse1');
+        aa.addData(addData2);
+        aa.peopleXY([0.3,0.36]);//用来设置用户输入的点,并且只有单个椭圆的时候才会绘制SDCM
     })
     </script>
 

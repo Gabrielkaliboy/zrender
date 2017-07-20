@@ -55,6 +55,87 @@ arrDataAll=[{
     - dataId:每个图像唯一的身份标识，主要用来新增和删除对应的图形
     - data:核心，用来画图形的主要数据
     - name:每个不同的data都是一个单独的系列，每个系列都有一个名称，name就是名称
+
+### zrender2.0升级到3.0遇到的坑
+#### 路径不一样
+2.0版本
+```
+[
+    "zrender",
+    'zrender/shape/Line',
+    'zrender/shape/Text',
+]
+```
+
+3.0 版本在shape的上一级目录里面又加了一个graphic
+```
+        [
+            "zrender",
+            'zrender/graphic/shape/Line',
+            'zrender/graphic/shape/Rect',
+            'zrender/graphic/shape/Circle',
+            'zrender/graphic/shape/Arc',
+            'zrender/tool/path',
+            'zrender/graphic/Text',
+            'zrender/core/util'
+        ],
+```
+
+#### 添加图形方法不一样
+2.0
+```
+zr.addShape(lineX);
+```
+3.0
+```
+zr.add(lineX);
+```
+并且在3.0版本里面没有zr.render()这个方法
+
+#### 构造图形的函数名称不一样
+2.0 画text文档
+```
+TextShape
+```
+3.0 画text文档
+```
+ZText
+```
+#### 画直线的时候
+2.0
+```
+var lineY = new LineShape({
+    style:{
+        xStart :50 ,//起点和终点设置和3.0不同
+        yStart : stepY+50,
+        xEnd : this.Setting.contain_width+50,
+        yEnd : stepY+50,
+        strokeColor : '#BFBFBF', 
+        lineWidth : 2,
+        lineCap : 'butt',
+        lineType : 'dotted',//直接指定线行就行，与3.0不同
+    },
+});
+zr.addShape(lineY);
+```
+3.0
+```
+var lineX = new LineShape({
+    style: {
+        stroke: '#BFBFBF', 
+        lineWidth: 2,
+        lineCap: 'butt',
+        lineDash: [3, 3],//新版本里面的虚线
+    },
+    shape: {
+        x1: stepX,//分别对应起点终点，这和2.0不同
+        y1: 50,
+        x2: stepX,
+        y2: this.Setting.contain_height + 50,
+    }
+});
+```
+
 ### 更新说明
 #### 11.html
 1. 只是新增了部分数据，做个记录
@@ -64,4 +145,12 @@ arrDataAll=[{
 3. 支持不显示坐标
 4. 支持初始化数组为空时，图形坐标的正确显示（默认色坐标为0,0），其实就是没有数据的时候，让坐标为0-1
 5. 1个椭圆标准的时候，支持配置显示sdcm和标题
+
+#### SDCM1.js
+对应12.html
+
+#### 13.html
+修复了12.html中调试过程中的一些已知bug
+
+#### SDCM2.js对应 13.html
 
