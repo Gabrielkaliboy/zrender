@@ -102,6 +102,7 @@ TextShape
 ZText
 ```
 #### 画直线的时候
+注意2.0中控制图像颜色的是strokeColor，而3.0位stroke
 2.0
 ```
 var lineY = new LineShape({
