@@ -76,7 +76,7 @@ myEllipse.prototype = {
         //获取容器的高度
         this.Setting.contain_width = $("#" + divid).width() - 200;
         //设置边框线条
-        $("#" + divid).css({ "border": "2px solid #000" });
+        //$("#" + divid).css({ "border": "2px solid #000" });
         //根据获取的容器宽高来设置真实坐标系中每格代表多少像素
         this.Setting.kX = this.Setting.contain_width / 10;
         this.Setting.kY = this.Setting.contain_height / 10;
@@ -90,7 +90,7 @@ myEllipse.prototype = {
         this.Setting.ellipseOne = null;
         //如果arrDataAll里面只有一个对象，且是椭圆类型，将其中心点坐标存在setting里面，方便后面计算SDCM
         if (this.Setting.arrDataAll !== null && this.Setting.arrDataAll.length == 1 && this.Setting.arrDataAll[0].type == "Ellipse") {
-            this.Setting.ellipseOne = arrDataAll[0].data;
+            this.Setting.ellipseOne = this.Setting.arrDataAll[0].data;
         }
         //初始化设置一下最大最小以及步长,将用户输入的xt,yt顺便存一份，还有计算出来的SDCM
         if (arrData !== undefined && arrData !== null && arrData.length != 0) {
@@ -771,8 +771,12 @@ myEllipse.prototype = {
         return importData;
     },
     peopleXY: function (xyData) {
-        var xyData = this.importXY(xyData);
+        var xyData = this.importXY(xyData),
+            arrDataAll = this.Setting.arrDataAll,
+            divid = this.Setting.divid,
+            showOrNot = this.Setting.showOrNot;
         this.Setting.xt = xyData[0];
         this.Setting.yt = xyData[1];
+        this.Mainclass(divid, arrDataAll, showOrNot);
     },
 };
